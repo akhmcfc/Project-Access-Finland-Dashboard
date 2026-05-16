@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Access Finland - Bootcamp Analytics 2023-2025</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        body {
+            background: #FFF9E6;
+            padding: 20px;
+            min-height: 100vh;
+            color: #2D2D2D;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            border-left: 6px solid #FFD700;
+        }
+        
+        header {
+            padding: 0 0 30px 0;
+            border-bottom: 3px solid #f0f0f0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2D2D2D;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        
+        .title-accent {
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .dashboard-title {
+            font-size: 1.8em;
+            color: #2D2D2D;
+            font-weight: 700;
+        }
+        
+        .data-range {
+            color: #FFD700;
+            font-weight: 600;
+            font-size: 1.1em;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .filter-bar {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #2D2D2D;
+            font-weight: 500;
+        }
+        
+        .filter-select:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.1);
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.15);
+        }
+        
+        .reset-btn {
+            padding: 12px 25px;
+            background: #FFD700;
+            color: #2D2D2D;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            margin-left: auto;
+        }
+        
+        .reset-btn:hover {
+            background: #FFC700;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .metric-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        /* First 3 cards - Yellow */
+        .metric-card:nth-child(1)::before { background: #FFD700; }
+        .metric-card:nth-child(2)::before { background: #FFD700; }
+        .metric-card:nth-child(3)::before { background: #FFD700; }
+        
+        /* 4th card - Yellow border */
+        .metric-card:nth-child(4)::before { background: #FFD700; }
+        
+        .metric-value {
+            font-size: 3.2em;
+            font-weight: 800;
+            margin: 15px 0;
+            letter-spacing: -2px;
+            line-height: 1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        /* First 3 cards - Yellow values */
+        .metric-card:nth-child(1) .metric-value,
+        .metric-card:nth-child(2) .metric-value,
+        .metric-card:nth-child(3) .metric-value {
+            color: #FFD700;
+        }
+        
+        /* 4th card - Yellow value */
+        .metric-card:nth-child(4) .metric-value {
+            color: #FFD700;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        
+        .metric-change {
+            font-size: 0.95em;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        /* First 3 cards - Green change text */
+        .metric-card:nth-child(1) .metric-change,
+        .metric-card:nth-child(2) .metric-change,
+        .metric-card:nth-child(3) .metric-change {
+            color: #10b981;
+        }
+        
+        /* 4th card - Green change text */
+        .metric-card:nth-child(4) .metric-change {
+            color: #10b981;
+        }
+        
+        .metric-change.negative {
+            color: #ef4444;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        
+        .chart-title {
+            font-size: 1.4em;
+            color: #2D2D2D;
+            margin-bottom: 25px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        canvas {
+            max-height: 400px;
+            width: 100% !important;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .metric-value {
+                font-size: 2.5em;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .reset-btn {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #FFD700;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 <span class="title-accent">Project Access Finland</span></h1>
+            <h1 style="font-size: 2.2em;">Bootcamp Analytics Dashboard</h1>
+            <p class="subtitle"></p>
+        </header>
+        
+        <div class="dashboard-header">
+            <div class="dashboard-title">📊 Bootcamp Performance Overview</div>
+            <div class="data-range">Data Range: 2023 - 2025</div>
+        </div>
+        
+        <div class="filter-bar">
+            <div class="filter-group">
+                <div class="filter-label">Filter by Year</div>
+                <select class="filter-select" id="yearFilter" onchange="applyFilters()">
+                    <option value="all">All Years (2023-2025)</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">Target Destination</div>
+                <select class="filter-select" id="destinationFilter" onchange="applyFilters()">
+                    <option value="all">All Destinations</option>
+                    <option value="Not sure / Multiple">Not Sure / Multiple</option>
+                    <option value="EU">EU</option>
+                    <option value="USA">USA</option>
+                    <option value="UK">UK</option>
+                </select>
+            </div>
+            
+            <button class="reset-btn" onclick="resetFilters()">Reset All Filters</button>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">Processing data and updating charts...</div>
+        
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- Metrics will be dynamically loaded -->
+        </div>
+        
+        <div class="chart-grid">
+            <div class="chart-container">
+                <div class="chart-title">🎯 Top Dream Universities</div>
+                <canvas id="universityChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🌍 Target Destinations</div>
+                <canvas id="destinationChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-grid">
+            <div class="chart-container full-width">
+                <div class="chart-title">🏫 Top Contributing Finnish Schools</div>
+                <canvas id="schoolChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-grid">
+            <div class="chart-container">
+                <div class="chart-title">📚 Fields of Study</div>
+                <canvas id="fieldChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">📍 Geographic Distribution</div>
+                <canvas id="cityChart"></canvas>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Project Access Finland • Data Analysis Dashboard • Generated from 2023-2025 bootcamp data</p>
+            <p>Last updated: <span id="currentDate"></span></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Set current date in footer
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Color schemes for charts
+        const colors = {
+            primary: ['#667eea', '#764ba2', '#4facfe', '#43e97b', '#fa709a', '#feca57', '#ff6b6b', '#8b5cf6'],
+            gradient: ['rgba(102, 126, 234, 0.8)', 'rgba(118, 75, 162, 0.8)', 'rgba(240, 147, 251, 0.8)'],
+            uk: '#002147',
+            usa: '#DC143C',
+            eu: '#003399',
+            notSure: '#6b7280',
+            accepted: '#10b981',
+            rejected: '#ef4444',
+            pafYellow: '#FFD700',
+            pafYellowDark: '#FFC700',
+            locationsGreen: '#10b981'
+        };
+        
+        // Store chart instances
+        let charts = {};
+        
+        // Updated location data
+        const locationData = {
+            2023: { finnish: 27, abroad: 10, total: 37 },
+            2024: { finnish: 37, abroad: 22, total: 59 },
+            2025: { finnish: 30, abroad: 13, total: 43 },
+            all: { finnish: 59, abroad: 33, total: 92 }
+        };
+        
+        // Dream universities data
+        const universityData = {
+            2023: {
+                labels: ['Oxford', 'Harvard', 'Cambridge', 'University of Amsterdam', 'MIT', 'Stanford', 'Maastricht', 'Bocconi', 'Yale', 'Leiden University', 'UCL'],
+                values: [21, 17, 15, 14, 7, 6, 5, 4, 4, 3, 3]
+            },
+            2024: {
+                labels: ['Harvard', 'Oxford', 'Cambridge', 'University of Amsterdam', 'MIT', 'Yale', 'Stanford', 'Columbia', 'Bocconi', 'UC Berkeley', 'ETH Zurich', "King's College London"],
+                values: [41, 32, 27, 16, 13, 13, 8, 6, 5, 4, 4, 4]
+            },
+            2025: {
+                labels: ['Oxford', 'Harvard', 'Cambridge', 'MIT', 'LSE', 'NYU', 'Yale', 'University of Amsterdam', 'Bocconi', 'Maastricht', 'Sciences Po', 'Columbia', 'TU Delft', 'ETH Zurich'],
+                values: [18, 11, 10, 6, 6, 6, 5, 5, 3, 3, 3, 3, 3, 3]
+            },
+            all: {
+                labels: ['Oxford', 'Harvard', 'Cambridge', 'University of Amsterdam', 'MIT', 'Yale', 'Stanford', 'Bocconi', 'LSE', 'Columbia', 'Maastricht'],
+                values: [71, 69, 52, 35, 26, 22, 16, 12, 11, 10, 10]
+            }
+        };
+        
+        // Destination data - Updated with accurate values
+        const destinationData = {
+            2023: {
+                labels: ['Not sure / Multiple', 'EU', 'USA', 'UK'],
+                values: [62, 36, 18, 13]
+            },
+            2024: {
+                labels: ['Not sure / Multiple', 'EU', 'USA', 'UK'],
+                values: [113, 48, 42, 24]
+            },
+            2025: {
+                labels: ['Not sure / Multiple', 'EU', 'UK', 'USA'],
+                values: [51, 35, 17, 16]
+            },
+            all: {
+                labels: ['Not sure / Multiple', 'EU', 'USA', 'UK'],
+                values: [226, 119, 76, 54]
+            }
+        };
+        
+        // Main dataset compiled from 2023-2025
+        const fullData = {
+            // Years data
+            years: {
+                labels: ['2023', '2024', '2025'],
+                totals: [131, 231, 122],
+                accepted: [68, 107, 105],
+                rejected: [63, 124, 17]
+            },
+            
+            // Dream universities - use combined data
+            universities: universityData.all,
+            
+            // Target destinations - use combined data
+            destinations: destinationData.all,
+            
+            // Top Finnish schools
+            schools: {
+                labels: ['Ressun lukio', 'Helsingin Suomalainen Yhteiskoulu (SYK)', 'Otaniemen lukio', 'Mäkelänrinteen lukio', 'Alppilan lukio', 'Töölön yhteiskoulu', 'Kulosaaren yhteiskoulu', 'Helsingin normaalilyseo', 'Tampereen lyseon lukio', 'Vaskivuoren lukio'],
+                values: [42, 38, 28, 24, 22, 20, 18, 16, 14, 12]
+            },
+            
+            // Fields of study
+            fields: {
+                labels: ['Law', 'Business & Economics', 'Medicine', 'Natural Sciences', 'Social Sciences', 'Humanities', 'Computer Science', 'Arts & Design'],
+                values: [86, 78, 62, 58, 52, 48, 42, 24]
+            },
+            
+            // Top cities
+            cities: {
+                labels: ['Helsinki', 'Espoo', 'Tampere', 'Vantaa', 'Oulu', 'Lahti', 'Kuopio', 'Turku', 'Jyväskylä', 'Other Cities'],
+                values: [158, 88, 42, 38, 36, 28, 24, 22, 20, 148]
+            },
+            
+            // Acceptance rates by year
+            acceptanceRates: [51.9, 46.3, 86.1],
+            
+            // University data by year
+            universitiesByYear: universityData,
+            
+            // Destination data by year
+            destinationsByYear: destinationData,
+            
+            // Filtered data cache
+            filtered: null
+        };
+        
+        // Initialize dashboard
+        function initDashboard() {
+            updateMetrics(fullData);
+            initCharts(fullData);
+        }
+        
+        // Update metrics cards
+        function updateMetrics(data) {
+            const yearFilter = document.getElementById('yearFilter').value;
+            const destinationFilter = document.getElementById('destinationFilter').value;
+            
+            const totalApplicants = data.years.totals.reduce((a, b) => a + b, 0);
+            const totalAccepted = data.years.accepted.reduce((a, b) => a + b, 0);
+            const totalSchools = 10;
+            
+            // Get location data based on filters
+            let locationInfo;
+            if (yearFilter === 'all') {
+                locationInfo = locationData.all;
+            } else {
+                locationInfo = locationData[yearFilter];
+            }
+            
+            // Apply scaling based on destination filter
+            if (destinationFilter !== 'all') {	
+                // Find the destination data for the current year
+                const destData = yearFilter === 'all' ? destinationData.all : destinationData[yearFilter];
+                const destIndex = destData.labels.indexOf(destinationFilter);
+                if (destIndex !== -1) {
+                    const destProportion = destData.values[destIndex] / destData.values.reduce((a, b) => a + b, 0);
+                    locationInfo = {
+                        finnish: Math.round(locationInfo.finnish * destProportion),
+                        abroad: Math.round(locationInfo.abroad * destProportion),
+                        total: Math.round(locationInfo.total * destProportion)
+                    };
+                }
+            }
+            
+            const acceptanceRate = ((totalAccepted / totalApplicants) * 100).toFixed(1);
+            const yearOverYearChange = (((data.years.totals[2] - data.years.totals[0]) / data.years.totals[0]) * 100).toFixed(1);
+            
+            const metricsHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Total Applicants</div>
+                    <div class="metric-value">${totalApplicants.toLocaleString()}</div>
+                    <div class="metric-change">3-year total • ${yearOverYearChange}% growth</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Acceptance Rate</div>
+                    <div class="metric-value">${acceptanceRate}%</div>
+                    <div class="metric-change">${totalAccepted} accepted of ${totalApplicants}</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Schools Represented</div>
+                    <div class="metric-value">${totalSchools}</div>
+                    <div class="metric-change">Top Finnish lukios</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">📍 Locations Approached By</div>
+                    <div class="metric-value">${locationInfo.total}</div>
+                    <div class="metric-change">${locationInfo.finnish} Finnish + ${locationInfo.abroad} Abroad</div>
+                </div>
+            `;
+            
+            document.getElementById('metricsGrid').innerHTML = metricsHTML;
+        }
+        
+        // Initialize all charts
+        function initCharts(data) {
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+            
+            // Get current year filter
+            const yearFilter = document.getElementById('yearFilter').value;
+            
+            // Get university data for current year
+            const universityData = yearFilter === 'all' ? data.universities : fullData.universitiesByYear[yearFilter];
+            
+            // Get destination data for current year
+            const destinationData = yearFilter === 'all' ? data.destinations : fullData.destinationsByYear[yearFilter];
+            
+            // 1. University Chart
+            charts.university = new Chart(document.getElementById('universityChart'), {
+                type: 'bar',
+                data: {
+                    labels: universityData.labels,
+                    datasets: [{
+                        label: 'Times Mentioned',
+                        data: universityData.values,
+                        backgroundColor: colors.primary[0],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Mentions: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Mentions',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 2. Destination Chart - Updated with accurate data
+            const destColors = destinationData.labels.map(label => {
+                if (label === 'UK') return colors.uk;
+                if (label === 'USA') return colors.usa;
+                if (label === 'EU') return colors.eu;
+                return colors.notSure;
+            });
+            
+            charts.destination = new Chart(document.getElementById('destinationChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: destinationData.labels,
+                    datasets: [{
+                        data: destinationData.values,
+                        backgroundColor: destColors,
+                        borderWidth: 3,
+                        borderColor: '#fff',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} applicants`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '55%'
+                }
+            });
+            
+            // 3. School Chart
+            charts.school = new Chart(document.getElementById('schoolChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.schools.labels,
+                    datasets: [{
+                        label: 'Number of Applicants',
+                        data: data.schools.values,
+                        backgroundColor: colors.primary[1],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Applicants',
+                                font: {
+                                    size: 14,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Field Chart
+            charts.field = new Chart(document.getElementById('fieldChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.fields.labels,
+                    datasets: [{
+                        data: data.fields.values,
+                        backgroundColor: colors.primary,
+                        borderWidth: 3,
+                        borderColor: '#fff',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} applicants`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '55%'
+                }
+            });
+            
+            // 5. City Chart
+            charts.city = new Chart(document.getElementById('cityChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.cities.labels,
+                    datasets: [{
+                        label: 'Applicants',
+                        data: data.cities.values,
+                        backgroundColor: colors.primary[2],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Applicants',
+                                font: {
+                                    size: 14,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            setTimeout(() => {
+                const year = document.getElementById('yearFilter').value;
+                const destination = document.getElementById('destinationFilter').value;
+                
+                // Filter data based on selections
+                let filteredData = JSON.parse(JSON.stringify(fullData));
+                
+                // Apply year filter
+                if (year !== 'all') {
+                    const yearIndex = filteredData.years.labels.indexOf(year);
+                    filteredData.years.totals = [filteredData.years.totals[yearIndex]];
+                    filteredData.years.accepted = [filteredData.years.accepted[yearIndex]];
+                    filteredData.years.rejected = [filteredData.years.rejected[yearIndex]];
+                    filteredData.years.labels = [year];
+                    filteredData.acceptanceRates = [filteredData.acceptanceRates[yearIndex]];
+                    
+                    // Use year-specific university data
+                    filteredData.universities = fullData.universitiesByYear[year];
+                    
+                    // Use year-specific destination data
+                    filteredData.destinations = fullData.destinationsByYear[year];
+                    
+                    // Adjust other data proportionally
+                    const scaleFactor = filteredData.years.totals[0] / fullData.years.totals[yearIndex];
+                    
+                    filteredData.schools.values = filteredData.schools.values.map(v => Math.round(v * scaleFactor));
+                    filteredData.fields.values = filteredData.fields.values.map(v => Math.round(v * scaleFactor));
+                    filteredData.cities.values = filteredData.cities.values.map(v => Math.round(v * scaleFactor));
+                } else {
+                    // Use combined data for all years	
+                    filteredData.universities = fullData.universitiesByYear.all;
+                    filteredData.destinations = fullData.destinationsByYear.all;
+                }
+                
+
+                // Apply destination filter
+                if (destination !== 'all') {
+                    const destIndex = filteredData.destinations.labels.indexOf(destination);
+                    if (destIndex !== -1) {
+                        const destProportion = filteredData.destinations.values[destIndex] / filteredData.destinations.values.reduce((a, b) => a + b, 0);
+                        
+                        // Scale all data by destination proportion
+                        filteredData.schools.values = filteredData.schools.values.map(v => Math.round(v * destProportion));
+                        filteredData.fields.values = filteredData.fields.values.map(v => Math.round(v * destProportion));
+                        filteredData.cities.values = filteredData.cities.values.map(v => Math.round(v * destProportion));
+                        filteredData.years.totals = filteredData.years.totals.map(v => Math.round(v * destProportion));
+                        filteredData.years.accepted = filteredData.years.accepted.map(v => Math.round(v * destProportion));
+                        filteredData.years.rejected = filteredData.years.rejected.map(v => Math.round(v * destProportion));
+                    }
+                }
+                
+                // Store filtered data
+                fullData.filtered = filteredData;
+                
+                // Update dashboard
+                updateMetrics(filteredData);
+                initCharts(filteredData);
+                
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 300);
+        }
+        
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('yearFilter').value = 'all';
+            document.getElementById('destinationFilter').value = 'all';
+            
+            updateMetrics(fullData);
+            initCharts(fullData);
+        }
+        
+        // Initialize the dashboard when page loads
+        window.onload = function() {
+            initDashboard();
+        };
+    </script>
+</body>
+</html>
